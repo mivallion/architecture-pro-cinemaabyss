@@ -1,0 +1,133 @@
+@startuml cinemaabyss-container
+' !NEW_C4_STYLE=1
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+
+title CinemaAbyss — Container Diagram
+
+AddElementTag("user-domain", $bgColor="#9c0b97", $fontColor="#ffffff")
+AddElementTag("content-domain", $bgColor="#6db33f", $fontColor="#ffffff")
+AddElementTag("billing-domain", $bgColor="#e8740c", $fontColor="#ffffff")
+AddElementTag("infra", $bgColor="#2124a7", $fontColor="#ffffff")
+
+Person_Ext(user1, "Пользователь Web UI")
+Person_Ext(user2, "Пользователь Mobile")
+Person_Ext(user3, "Пользователь Smart TV")
+
+Person(admin, "Администратор")
+
+System_Boundary(cinemaabyss, "Кинобездна") {
+    Container(webui, "Web UI", "HTML/CSS/JS", "Web интерфейс")
+    Container(mobileui, "Mobile UI", "Kotlin", "Мобильные приложения")
+    Container(tvui, "Smart TV UI", "Kotlin", "Приложения для Smart TV")
+
+    Container(adminui, "Admin Web UI", "HTML/CSS/JS", "Интерфейс управления платформой")
+
+    Container(webbff, "Web BFF", "NodeJS", "Адаптация данных для Web-клиентов", $tags="infra")
+    Container(mobilebff, "Mobile BFF", "Go", "Адаптация данных для Mobile-клиентов", $tags="infra")
+    Container(tvbff, "Smart TV BFF", "Go", "Адаптация данных для SmartTV-клиентов", $tags="infra")
+    Container(adminbff, "Admin BFF", "Go", "Адаптация данных для Admin UI", $tags="infra")
+    Container(gateway, "API Gateway", "Go", "Роутинг запросов, валидация JWT", $tags="infra")
+
+    ContainerQueue(kafka, "Kafka", "Event bus для межсервисной коммуникации", $tags="infra")
+
+    Container(auth_api, "Auth Service", "Go", "Аутентификация JWT (login, refresh, logout). Управление пользователями и правами доступа.", $tags="user-domain")
+    Container(user_api, "User API", "Go", "Управление пользователями", $tags="user-domain")
+
+    Container(sub_api, "Subscription API", "Go", "Управление подписками", $tags="billing-domain")
+    Container(loyalty_api, "Loyalty API", "Go", "Управление скидками", $tags="billing-domain")
+    Container(payment_api, "Payment API", "Go", "Управление оплатой", $tags="billing-domain")
+
+    Container(movie_api, "Movie API", "Go", "Proxy для просмотра фильмов", $tags="content-domain")
+    Container(feed_api, "Feed API", "Go", "Выдача пользовательской ленты (Feed CRUD API)", $tags="content-domain")
+    Container(feed_fetcher, "Feed fetcher", "Go", "Генерация пользовательской ленты", $tags="content-domain")
+    Container(meta_api, "Metadata API", "Go", "CRUD метаданных фильмов - ссылки, жанры, актёры, оценки", $tags="content-domain")
+
+    Container(monolith, "Cinema Abyss Monolith (deprecated)", "Go", "Старый монолит. Fallback при отсутствии новых сервисов (Strangler fig).", $tags="infra")
+
+    Deployment_Node(pg_instance, "PostgreSQL Instance", "Единый инстанс на этапе миграции") {
+        ContainerDb(auth_db, "Auth DB", "PostgreSQL Schema", $tags="user-domain")
+        ContainerDb(user_db, "Users DB", "PostgreSQL Schema", $tags="user-domain")
+        ContainerDb(sub_db, "Subscriptions DB", "PostgreSQL Schema", $tags="billing-domain")
+        ContainerDb(payment_db, "Payments DB", "PostgreSQL Schema", $tags="billing-domain")
+        ContainerDb(loyalty_db, "Loyalty DB", "PostgreSQL Schema", $tags="billing-domain")
+        ContainerDb(feed_db, "Feed DB", "PostgreSQL Schema", $tags="content-domain")
+        ContainerDb(meta_db, "Metadata DB", "PostgreSQL Schema", $tags="content-domain")
+    }
+}
+
+System_Ext(loyalty_ext, "Внешняя система скидок", "Сторонний сервис лояльности")
+System_Ext(reco, "Рекомендательная система", "Сторонний сервис подбора контента")
+SystemQueue_Ext(rabbitmq, "RabbitMQ", "Брокер сообщений для интеграции с рекомендательной системой")
+System_Ext(onlinecinema, "Онлайн-кинотеатры")
+System_Ext(s3, "S3")
+System_Ext(payment, "Платежная система")
+
+Rel(user1, webui, "", "HTTP")
+Rel(user2, mobileui, "", "HTTP")
+Rel(user3, tvui, "", "HTTP")
+
+Rel(admin, adminui, "", "HTTP")
+
+Rel(webui, webbff, "", "HTTP")
+Rel(mobileui, mobilebff, "", "HTTP")
+Rel(tvui, tvbff, "", "HTTP")
+Rel(adminui, adminbff, "", "HTTP")
+
+Rel(webbff, gateway, "", "HTTP")
+Rel(mobilebff, gateway, "", "HTTP")
+Rel(tvbff, gateway, "", "HTTP")
+Rel(adminbff, gateway, "", "HTTP")
+
+Rel(gateway, movie_api, "Просмотр фильмов", "HTTP")
+Rel(gateway, feed_api, "Пользовательская лента", "HTTP")
+Rel(gateway, auth_api, "Аутентификация, валидация JWT", "HTTP")
+Rel(gateway, user_api, "Управление пользователями", "HTTP")
+Rel(gateway, sub_api, "Управление подписками", "HTTP")
+Rel(gateway, meta_api, "Метаданные фильмов", "HTTP")
+Rel(gateway, loyalty_api, "Скидки и промокоды", "HTTP")
+Rel(gateway, payment_api, "Оплата", "HTTP")
+Rel(gateway, monolith, "Strangler fig, fallback", "HTTP")
+
+Rel(monolith, pg_instance, "", "SQL|TCP")
+Rel(sub_api, sub_db, "", "SQL|TCP")
+Rel(feed_api, feed_db, "", "SQL|TCP")
+Rel(user_api, user_db, "", "SQL|TCP")
+Rel(auth_api, auth_db, "", "SQL|TCP")
+Rel(meta_api, meta_db, "", "SQL|TCP")
+Rel(payment_api, payment_db, "", "SQL|TCP")
+Rel(loyalty_api, loyalty_db, "", "SQL|TCP")
+
+Rel(loyalty_api, loyalty_ext, "", "HTTP")
+
+' Рекомендации
+Rel(sub_api, kafka, "Изменения подписок", "Kafka/TCP")
+Rel(user_api, kafka, "Изменения пользователей", "Kafka/TCP")
+Rel(meta_api, kafka, "Изменения метаданных", "Kafka/TCP")
+Rel(kafka, feed_fetcher, "События для персонализации", "Kafka/TCP")
+Rel(feed_fetcher, kafka, "Обновление рекомендаций", "Kafka/TCP")
+Rel(kafka, feed_api, "Обновление рекомендаций", "Kafka/TCP")
+
+' Оплата
+Rel(sub_api, loyalty_api, "Валидация промокодов", "HTTP")
+Rel(sub_api, payment_api, "Списание средств", "HTTP")
+Rel(payment_api, payment, "Оплата подписок")
+Rel(payment_api, kafka, "События оплаты", "Kafka/TCP")
+Rel(kafka, sub_api, "Статус оплаты", "Kafka/TCP")
+
+Rel(feed_fetcher, rabbitmq, "Пользовательские данные")
+Rel(movie_api, onlinecinema, "Просмотр фильмов")
+Rel(movie_api, s3, "Просмотр видео")
+
+Rel(rabbitmq, reco, "Пользовательские данные")
+Rel(reco, rabbitmq, "Персонализированные рекомендации")
+Rel(rabbitmq, feed_fetcher, "Персонализированные рекомендации")
+
+Legend
+  |= Цвет |= Домен |
+  |<#438dd5>| Пользователи и доступ |
+  |<#6db33f>| Контент |
+  |<#e8740c>| Биллинг |
+  |<#8c8c8c>| Инфраструктура |
+EndLegend
+
+@enduml

@@ -1,0 +1,33 @@
+@startuml cinemaabyss-context
+!NEW_C4_STYLE=1
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title CinemaAbyss — System Context
+
+Person_Ext(user1, "Пользователь Web UI")
+Person_Ext(user2, "Пользователь Mobile")
+Person_Ext(user3, "Пользователь Smart TV")
+
+System(cinemaabyss, "Кинобездна", "Метаданные, контент, пользователи и т. д.")
+
+System_Ext(reco, "Рекомендательная система", "Сторонний сервис подбора контента")
+SystemQueue_Ext(rabbitmq, "RabbitMQ", "Брокер сообщений для интеграции с рекомендательной системой")
+
+System_Ext(onlinecinema, "Онлайн-кинотеатры")
+System_Ext(s3, "S3")
+System_Ext(payment, "Платежная система")
+System_Ext(loyalty_ext, "Сервис лояльности", "Сторонний сервис скидок и программ лояльности")
+
+Rel(user1, cinemaabyss, "")
+Rel(user2, cinemaabyss, "")
+Rel(user3, cinemaabyss, "")
+
+Rel(cinemaabyss, rabbitmq, "Отправляет метаданные, получает персонализированные рекомендации")
+Rel(cinemaabyss, onlinecinema, "Просмотр фильмов")
+Rel(cinemaabyss, s3, "Хранение видео")
+Rel(cinemaabyss, payment, "Оплата подписок")
+Rel(cinemaabyss, loyalty_ext, "Скидки и программы лояльности")
+Rel(rabbitmq, reco, "Обновления в пользовательских данных")
+Rel(reco, rabbitmq, "Обновленная пользовательская лента")
+
+@enduml
