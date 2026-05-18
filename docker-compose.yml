@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: postgres_password
       POSTGRES_DB: cinemaabyss
     ports:
-      - "5432:5432"
+      - "45432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./src/database/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -27,7 +27,7 @@ services:
     image: wurstmeister/zookeeper:latest
     container_name: cinemaabyss-zookeeper
     ports:
-      - "2181:2181"
+      - "42181:2181"
     networks:
       - cinemaabyss-network
 
@@ -38,7 +38,7 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - "9092:9092"
+      - "49092:9092"
     environment:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
@@ -59,7 +59,7 @@ services:
     depends_on:
       - postgres
     ports:
-      - "8080:8080"
+      - "48080:8080"
     environment:
       PORT: 8080
       DB_CONNECTION_STRING: postgres://postgres:postgres_password@postgres:5432/cinemaabyss?sslmode=disable
@@ -75,29 +75,29 @@ services:
     depends_on:
       - postgres
     ports:
-      - "8081:8081"
+      - "48081:8081"
     environment:
       PORT: 8081
       DB_CONNECTION_STRING: postgres://postgres:postgres_password@postgres:5432/cinemaabyss?sslmode=disable
     networks:
       - cinemaabyss-network
 
-  # Events Microservice
-  events-service:
-    build:
-      context: ./src/microservices/events
-      dockerfile: Dockerfile
-    container_name: cinemaabyss-events-service
-    depends_on:
-      - postgres
-      - kafka
-    ports:
-      - "8082:8082"
-    environment:
-      PORT: 8082
-      KAFKA_BROKERS: kafka:9092
-    networks:
-      - cinemaabyss-network
+  # # Events Microservice
+  # events-service:
+  #   build:
+  #     context: ./src/microservices/events
+  #     dockerfile: Dockerfile
+  #   container_name: cinemaabyss-events-service
+  #   depends_on:
+  #     - postgres
+  #     - kafka
+  #   ports:
+  #     - "8082:8082"
+  #   environment:
+  #     PORT: 8082
+  #     KAFKA_BROKERS: kafka:9092
+  #   networks:
+  #     - cinemaabyss-network
 
   # Proxy Service (API Gateway)
   proxy-service:
@@ -108,9 +108,9 @@ services:
     depends_on:
       - monolith
       - movies-service
-      - events-service
+      # - events-service
     ports:
-      - "8000:8000"
+      - "48000:8000"
     environment:
       PORT: 8000
       MONOLITH_URL: http://monolith:8080
@@ -128,7 +128,7 @@ services:
     depends_on:
       - kafka
     ports:
-      - "8090:8080"
+      - "48090:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: cinemaabyss
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
