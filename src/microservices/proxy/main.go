@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	middleware "github.com/oapi-codegen/echo-middleware"
 )
+
 func main() {
 	cfg, err := LoadConfig()
 	if err != nil {
@@ -32,7 +33,7 @@ func main() {
 
 	e.Use(middleware.OapiRequestValidator(swagger))
 
- strictHandler := api.NewStrictHandler(proxy, []api.StrictMiddlewareFunc{})
+	strictHandler := api.NewStrictHandler(proxy, []api.StrictMiddlewareFunc{})
 
 	api.RegisterHandlers(e, strictHandler)
 
