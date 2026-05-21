@@ -5,7 +5,7 @@ global:
 
 # Image pull secrets
 imagePullSecrets:
-  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6
+  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaXRsYWIuY29ycC5tYWlsLnJ1IjogewoJCQkiYXV0aCI6ICJkaTV6WlhaaGMzUjVZVzV2ZGtCMmF5NTBaV0Z0T2pFemJXWk1RVEV5UTFkbldFUjZNbVZxTW5sSCIKCQl9LAoJCSJyZWdpc3RyeS1naXRsYWIuY29ycC5tYWlsLnJ1IjogewoJCQkiYXV0aCI6ICJkaTV6WlhaaGMzUjVZVzV2ZGtCMmF5NTBaV0Z0T2tacFYyOUtOemxRZG5KNmNFMDNhVWhpZEZGTyIKCQl9LAoJCSJyZWdpc3RyeS1pbnQuczMtZGV2LmNvcnAuZGV2bWFpbC5ydSI6IHsKCQkJImF1dGgiOiAiWVdSdGFXNDZZMUZFTVVaSVNsSktiVGw0VjJFd1VRPT0iCgkJfSwKCQkicmVnaXN0cnkuczMtZGV2LmNvcnAuZGV2bWFpbC5ydSI6IHsKCQkJImF1dGgiOiAiWVdSdGFXNDZZMUZFTVVaSVNsSktiVGw0VjJFd1VRPT0iCgkJfSwKCQkiZ2hjci5pbyI6IHsKCQkJImF1dGgiOiAiYldsMllXeHNhVzl1T21kb2NGOHdUVGxMTUVjd1VEUm5SVVIwTVZSaFNtdGllV0ZNYTFKdlJVaFROMmswVmpaRGNIaz0iCgkJfQoJfQp9
 # Database configuration
 database:
   host: postgres
@@ -169,14 +169,30 @@ ingress:
   hosts:
     - host: cinemaabyss.example.com
       paths:
-        - path: /
+        - path: /health
+          pathType: Exact
+          service: proxy-service
+          port: 8000
+        - path: /api/movies
           pathType: Prefix
           service: proxy-service
-          port: 80
+          port: 8000
         - path: /api/events
           pathType: Prefix
-          service: events-service
-          port: 8082
+          service: proxy-service
+          port: 8000
+        - path: /api/users
+          pathType: Prefix
+          service: proxy-service
+          port: 8000
+        - path: /api/payments
+          pathType: Prefix
+          service: proxy-service
+          port: 8000
+        - path: /api/subscriptions
+          pathType: Prefix
+          service: proxy-service
+          port: 8000
 
 # Application configuration
 config:
