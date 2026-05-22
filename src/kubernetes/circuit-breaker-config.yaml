@@ -1,0 +1,71 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: cinemaabyss-circuit-breaker
+  namespace: cinemaabyss
+spec:
+  host: movies-service
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        h2UpgradePolicy: DEFAULT
+        http1MaxPendingRequests: 50
+        http2MaxRequests: 100
+        maxRequestsPerConnection: 2
+        maxRetries: 3
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 30s
+      baseEjectionTime: 60s
+      maxEjectionPercent: 50
+      minHealthPercent: 25
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: events-service-circuit-breaker
+  namespace: cinemaabyss
+spec:
+  host: events-service
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 80
+      http:
+        h2UpgradePolicy: DEFAULT
+        http1MaxPendingRequests: 40
+        http2MaxRequests: 80
+        maxRequestsPerConnection: 2
+        maxRetries: 2
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 45s
+      maxEjectionPercent: 40
+      minHealthPercent: 25
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: proxy-service-circuit-breaker
+  namespace: cinemaabyss
+spec:
+  host: proxy-service
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 150
+      http:
+        h2UpgradePolicy: DEFAULT
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 150
+        maxRequestsPerConnection: 4
+        maxRetries: 3
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 20s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 60
+      minHealthPercent: 25
