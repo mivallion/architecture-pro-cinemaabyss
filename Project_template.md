@@ -5,7 +5,10 @@
 1. Спроектируйте to be архитектуру КиноБездны, разделив всю систему на отдельные домены и организовав интеграционное взаимодействие и единую точку вызова сервисов.
 Результат представьте в виде контейнерной диаграммы в нотации С4.
 Добавьте ссылку на файл в этот шаблон
-[ссылка на файл](ссылка)
+### Context
+![Context](out/docs/C4/context/cinemaabyss-context.png)
+### Component
+![Component](out/docs/C4/container/cinemaabyss-container.png)
 
 
 ## Задание 2
@@ -59,6 +62,16 @@
 Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
 Приложите скриншот тестов и скриншот состояния топиков Kafka http://localhost:8090 
 
+### Brokers
+![Brokers](out/kafka/kafka_brokers.png)
+### Consumers
+![Consumers](out/kafka/kafka_consumers.png)
+### Messages
+![Messages](out/kafka/kafka_msg.png)
+### Topics
+![Topics](out/kafka/kafka_topics.png)
+### Tests
+![Tests](out/kafka/kafka_tests.png)
 
 ## Задание 3
 
@@ -227,7 +240,7 @@ cat .docker/config.json | base64
   ```
 
   Будет наподобие такого
-
+```
   NAME                              READY   STATUS    
 
   events-service-7587c6dfd5-6whzx   1/1     Running  
@@ -243,7 +256,7 @@ cat .docker/config.json | base64
   proxy-service-577d6c549b-6qfcv    1/1     Running  
 
   zookeeper-0                       1/1     Running 
-
+```
   8. Добавим ingress
 
   - добавьте аддон
@@ -274,6 +287,9 @@ cat .docker/config.json | base64
 #### Шаг 3
 Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
 
+### Kubernetes Tests
+![Kubernetes Tests](out/cinemaabyss_tests_kube.png)
+
 
 ## Задание 4
 Для простоты дальнейшего обновления и развертывания вам как архитектуру необходимо так же реализовать helm-чарты для прокси-сервиса и проверить работу 
@@ -286,7 +302,7 @@ cat .docker/config.json | base64
 proxyService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/proxy-service
+    repository: ghcr.io/mivallion/architecture-pro-cinemaabyss/proxy-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -303,7 +319,7 @@ proxyService:
     type: ClusterIP
 ```
 
-- Вместо ghcr.io/db-exp/cinemaabysstest/proxy-service напишите свой путь до образа для всех сервисов
+- Вместо ghcr.io/mivallion/architecture-pro-cinemaabyss/proxy-service напишите свой путь до образа для всех сервисов
 - для imagePullSecret проставьте свое значение (скопируйте из конфигурации kubernetes)
   ```yaml
   imagePullSecrets:
@@ -331,7 +347,7 @@ kubectl delete  namespace cinemaabyss
 ```
 Запустите 
 ```bash
-helm install cinemaabyss .\src\kubernetes\helm --namespace cinemaabyss --create-namespace
+helm install cinemaabyss ./src/kubernetes/helm --namespace cinemaabyss --create-namespace
 ```
 Если в процессе будет ошибка
 ```code
@@ -349,6 +365,10 @@ minikube tunnel
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
 
+### Helm Deployment
+![Helm Deployment](out/cinemaabyss_tests_helm_1.png)
+![Helm Movies curl](out/cinemaabyss_tests_helm_2.png)
+
 
 # Задание 5
 Компания планирует активно развиваться и для повышения надежности, безопасности, реализации сетевых паттернов типа Circuit Breaker и канареечного деплоя вам как архитектору необходимо развернуть istio и настроить circuit breaker для monolith и movies сервисов.
@@ -362,13 +382,13 @@ helm install istio-base istio/base -n istio-system --set defaultRevision=default
 helm install istio-ingressgateway istio/gateway -n istio-system
 helm install istiod istio/istiod -n istio-system --wait
 
-helm install cinemaabyss .\src\kubernetes\helm --namespace cinemaabyss --create-namespace
+helm install cinemaabyss ./src/kubernetes/helm --namespace cinemaabyss --create-namespace
 
 kubectl label namespace cinemaabyss istio-injection=enabled --overwrite
 
 kubectl get namespace -L istio-injection
 
-kubectl apply -f .\src\kubernetes\circuit-breaker-config.yaml -n cinemaabyss
+kubectl apply -f ./src/kubernetes/circuit-breaker-config.yaml -n cinemaabyss
 
 ```
 
@@ -414,6 +434,9 @@ You can see 21 for the upstream_rq_pending_overflow value which means 21 calls s
 ```
 
 Приложите скриншот работы circuit breaker'а
+
+### Circuit Breaker
+![Circuit Breaker](out/cinemaabyss_tests_fortio.png)
 
 Удаляем все
 ```bash

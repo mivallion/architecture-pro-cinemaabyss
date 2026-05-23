@@ -13,9 +13,11 @@ data:
   DB_NAME: {{ .Values.database.name | quote }}
   DB_USER: {{ .Values.database.user | quote }}
 
-  # Service URLs
-  MONOLITH_URL: "http://monolith:{{ .Values.monolith.service.port }}"
-  MOVIES_SERVICE_URL: "http://movies:{{ .Values.moviesService.service.port }}"
+  # Service URLs - using FQDN for DNS resolution in this cluster
+  MONOLITH_URL: "http://monolith.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.monolith.service.port }}"
+  MOVIES_SERVICE_URL: "http://movies-service.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.moviesService.service.port }}"
+  EVENTS_SERVICE_URL: "http://events-service.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.eventsService.service.port }}"
+  KAFKA_BROKERS: "kafka.{{ .Values.global.namespace }}.svc.cluster.local:9092"
   
   # Strangler Fig configuration
   GRADUAL_MIGRATION: {{ .Values.config.gradualMigration | quote }}
